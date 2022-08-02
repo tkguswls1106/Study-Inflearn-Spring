@@ -52,4 +52,13 @@ java -jar hello-spring-0.0.1-SNAPSHOT.jar
 
 ------------------------------------------------
 
+------------ '정적 컨텐츠' 강의 부분 필기 ------------
+
+static 폴더 안에 예를들어 hello-static.html 이란 파일을 만들고
+src_main_java_hellospring 안의 HelloSpringApplication 을 실행하여 서버를 켜면
+hello-static 이라는 맵핑 관련 컨트롤러가 존재하지않으므로, static 폴더를 보게되고,
+localhost:8080/hello-static.html 링크로 해당 파일을 출력시킬수 있다.
+
+------------------------------------------------
+
 ```
