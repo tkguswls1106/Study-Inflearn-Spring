@@ -33,6 +33,7 @@ templates_hello.html 파일의
 ${data} 부분이 'hello!!'로 치환되고
 그러면 화면에 출력될때 '안녕하세요. hello!!' 이렇게 출력되게 된다.
 즉, <p >안녕하세요. hello!!</p> 으로 코드가 치환된다는 것이다.
+참고로 p태그안의 안녕하세요. 손님 은 절대경로로 사이트 링크부분에 입력해서 서버없이 html파일 출력 확인할때 뜨게된다.
 참고로 물론 작은따옴표인 ''는 출력안된다.
 
 ------------------------------------------------
@@ -58,6 +59,18 @@ static 폴더 안에 예를들어 hello-static.html 이란 파일을 만들고
 src_main_java_hellospring 안의 HelloSpringApplication 을 실행하여 서버를 켜면
 hello-static 이라는 맵핑 관련 컨트롤러가 존재하지않으므로, static 폴더를 보게되고,
 localhost:8080/hello-static.html 링크로 해당 파일을 출력시킬수 있다.
+
+------------------------------------------------
+
+--------- 'MVC와 템플릿 엔진' 강의 부분 필기 ---------
+
+MVC: Model, View, Controller
+
+    @GetMapping("hello-mvc")
+    public String helloMvc(@RequestParam("name") String name, Model model) {  // 쿼리파라미터 /hello-mvc?name=shj 이런식으로 적어주면 된다. 참고로 쿼리파라미터는 get방식이다.
+        model.addAttribute("name", name);
+        return "hello-template";
+    }
 
 ------------------------------------------------
 
