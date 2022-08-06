@@ -142,4 +142,4 @@ public class LottoStore {
         new LottoStore().StoreStart();
     }
 }
- */
+*/
