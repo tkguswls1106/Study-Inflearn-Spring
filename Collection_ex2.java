@@ -63,6 +63,8 @@ public class Collection_ex2 {
     public static void main(String[] args) {
        Collection_ex2 start = new Collection_ex2();
        start.SelectMenu();
+       // 위의 두줄 코드를 간결하게 압축하자면
+       // new Collection_ex2().SelectMenu(); 이다.
     }
 }
 
