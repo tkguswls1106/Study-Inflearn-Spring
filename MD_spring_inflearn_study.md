@@ -11,6 +11,7 @@
 getter setter 같은거 사용할때에는 control + enter 키를 누르면 된다.
 implements로 인터페이스 상속시에 메소드들 불러올때 option + enter 키를 누르면 된다.
 듣기론 import는 control + space 또는 option + enter 키를 누르면 된다고 한다.
+같은이름의 변수명을 바꾸고싶을때는 키보드 커서를 해당 변수에 갖다놓고 shift + (fn) + F6 키를 누르고 이름을 변경하면 다같이 한번에 변경된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -216,6 +217,66 @@ public class MemoryMemberRepository implements MemberRepository {  // 인터페�
     public List<Member> findAll() {
         return new ArrayList<>(store.values());
         // ArrayList는 List 컬렉션 인터페이스를 구현한 구현클래스이다.
+    }
+}
+
+------------------------------------------------
+
+---- '회원 리포지토리 테스트 케이스 작성' 강의 부분 필기 ----
+
+class MemoryMemberRepositoryTest {
+
+    MemoryMemberRepository repository = new MemoryMemberRepository();
+
+    // 테스트로 클래스 실행을 하면, 안의 메소드들이 무작위 순서로 실행된다.
+    // 그러면서 겹치는 중복 객체라든가가 생기면 에러가 날 수 있기때문에, 각 메소드들 테스트 실행할때마다 다시 리포지토리를 초기화를 시켜주는 clear를 작성해주어야한다.
+    @AfterEach  // AfterEach는 클래스 테스트 실행시, 각 메소드들이 실행이 끝날때마다 어떠한 동작을 실행할수있게 해주는 역할이다.
+    public void afterEach() {
+        repository.clearStore();  // 이는 MemoryMemberRepository 클래스 안에 clearStore 메소드를 적어주고 코드를 적은것이다.
+    }
+
+    @Test
+    public void save() {  // 실행시켜서 녹색이 뜨면 정상실행 검사 성공. 참고로 이처럼 메소드별 검사도 가능하고, 클래스나 전체 등등 여러 범위로 검사 실행이 가능하다.
+        Member member = new Member();
+        member.setName("spring");
+
+        repository.save(member);
+
+        Member result = repository.findById(member.getId()).get();  // findById의 반환타입이 Optional이므로,
+                                                                    // 반환된 Optional<Member> 에서 정보를 꺼낼땐 .get()를 써준다.
+        assertThat(result).isEqualTo(member);
+        // 참고로 위와 같은 코드로 Assertions.assertEquals(member, result); 가 있다.
+        // 저장하고 난후 DB에서 불러온 result값이, 초반에 new로 저장한 member와, 값이 서로 같은지 잘 저장되고 잘 불러와졌는지 검증(확인)해보는 것임.
+    }
+
+    @Test
+    public void findByName() {
+        Member member1 = new Member();
+        member1.setName("spring1");
+        repository.save(member1);
+
+        Member member2 = new Member();
+        member2.setName("spring2");
+        repository.save(member2);
+
+        Member result = repository.findByName("spring1").get();
+
+        assertThat(result).isEqualTo(member1);
+    }
+
+    @Test
+    public void findAll() {
+        Member member1 = new Member();
+        member1.setName("spring1");
+        repository.save(member1);
+
+        Member member2 = new Member();
+        member2.setName("spring2");
+        repository.save(member2);
+
+        List<Member> result = repository.findAll();
+
+        assertThat(result.size()).isEqualTo(2);  // 반환타입이 Optional이 아니므로, .get()을 사용하지 않는다.
     }
 }
 
