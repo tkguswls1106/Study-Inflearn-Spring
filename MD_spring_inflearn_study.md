@@ -7,11 +7,13 @@
 서버 킬때는 src_main_java_hellospring 안의 HelloSpringApplication 실행.
 서버 새로고침할때는 위에 실행한거 껐다가 다시 실행시키면됨.
 
-인텔리제이에서는 command + shift + enter 키를 누르면 적던 코드가 알아서 자동완성 된다.
-getter setter 같은거 사용할때에는 control + enter 키를 누르면 된다.
-implements로 인터페이스 상속시에 메소드들 불러올때 option + enter 키를 누르면 된다.
-듣기론 import는 control + space 또는 option + enter 키를 누르면 된다고 한다.
-같은이름의 변수명을 바꾸고싶을때는 키보드 커서를 해당 변수에 갖다놓고 shift + (fn) + F6 키를 누르고 이름을 변경하면 다같이 한번에 변경된다.
+- 인텔리제이에서는 command + shift + enter 키를 누르면 적던 코드가 알아서 자동완성 된다.
+- getter setter 같은거 사용할때에는 control + enter 키를 누르면 된다.
+- implements로 인터페이스 상속시에 메소드들 불러올때 option + enter 키를 누르면 된다.
+- 듣기론 import는 control + space 또는 option + enter 키를 누르면 된다고 한다.
+- 같은이름의 변수명을 바꾸고싶을때는 키보드 커서를 해당 변수에 갖다놓고 shift + (fn) + F6 키를 누르고 이름을 변경하면 다같이 한번에 변경된다.
+- 예를들어 Optional<Member> result = memberRepository.findByName(member.getName()); 의 우항인 memberRepository.findByName(member.getName()); 만 작성해두고, command + option + v 키를 누르면 좌항이 Optional<Member> result 가 자동완성되고 이름을 지을 수 있다.
+- 따로 메소드를 빼서 만들어주고싶다면, 해당 작성한 메소드를 전부 드래그해놓고, control + t 키를 누르고 extract method 를 선택하면 된다. 아니면 그냥 드래그하고 command + option + m 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -44,6 +46,9 @@ ${data} 부분이 'hello!!'로 치환되고
 
 ------------------------------------------------
 
+MemberRepository 인터페이스는 단순히 데이터를 저장소에 저장하고 넣었다뺐다하는, 기계적인 개발적 느낌이 강하다면,
+MemberService 클래스같은 서비스 클래스는 join, findMembers 를 보다시피, 이름이 비즈니스적이다. 그래서 서비스 클래스에는 대개 비즈니스 관련 용어의 이름을 쓰며 비즈니스적 느낌이 강하다.
+
 ---------- '빌드하고 실행하기' 강의 부분 필기 ----------
 
 가장 상위 폴더인 hello-spring 디렉토리에서 터미널로 빌드코드 입력하면된다.
@@ -72,6 +77,7 @@ localhost:8080/hello-static.html 링크로 해당 파일을 출력시킬수 있�
 
 MVC: Model, View, Controller
 
+< main_hellospring_controller_HelloController >
     @GetMapping("hello-mvc")
     public String helloMvc(@RequestParam("name") String name, Model model) {  // 쿼리파라미터 /hello-mvc?name=shj 이런식으로 적어주면 된다. 참고로 쿼리파라미터는 get방식이다.
         model.addAttribute("name", name);
@@ -87,6 +93,7 @@ MVC: Model, View, Controller
 
 --------------- 'API' 강의 부분 필기 ---------------
 
+< main_hellospring_controller_HelloController >
     @GetMapping("hello-string")
     @ResponseBody  // @ResponseBody 를 사용하면 뷰 리졸버(viewResolver)를 사용하지 않아서 뷰 파일과 관련없어진다.
                    // 대신에 HTTP의 BODY에 문자 내용을 직접 반환하여 그 문자만 출력된다.
@@ -133,7 +140,7 @@ hellospring_repository_MemberRepository 인터페이스의 save 메소드 등등
 hellospring_repository_MemoryMemberRepository 에 DB로 회원정보 객체가 저장됨.
 
 
-< hellospring_domain_Member >
+< main_hellospring_domain_Member >
 // 회원 도메인 객체
 public class Member {
 
@@ -158,7 +165,7 @@ public class Member {
 }
 
 
-< hellospring_repository_MemberRepository >
+< main_hellospring_repository_MemberRepository >
 // 아직 데이터 저장소가 선정되지 않아서, 우선 인터페이스로 구현 클래스를 변경할 수 있도록 설계.
 // 데이터 저장소는 RDB, NoSQL 등등 다양한 저장소를 고민중인 상황으로 가정.
 
@@ -175,7 +182,7 @@ public interface MemberRepository {  // 여러 기능들을 인터페이스에 �
 }
 
 
-< hellospring_repository_MemoryMemberRepository >
+< main_hellospring_repository_MemoryMemberRepository >
 // 개발을 진행하기 위해서 초기 개발 단계에서는 구현체로 가벼운 메모리 기반의 데이터 저장소 사용
 
 // 회원 리포지토리 메모리 구현체
@@ -224,6 +231,7 @@ public class MemoryMemberRepository implements MemberRepository {  // 인터페�
 
 ---- '회원 리포지토리 테스트 케이스 작성' 강의 부분 필기 ----
 
+< test_hellospring_repository_MemoryMemberRepositoryTest >
 class MemoryMemberRepositoryTest {
 
     MemoryMemberRepository repository = new MemoryMemberRepository();
@@ -277,6 +285,42 @@ class MemoryMemberRepositoryTest {
         List<Member> result = repository.findAll();
 
         assertThat(result.size()).isEqualTo(2);  // 반환타입이 Optional이 아니므로, .get()을 사용하지 않는다.
+    }
+}
+
+------------------------------------------------
+
+---------- '회원 서비스 개발' 강의 부분 필기 ----------
+
+< main_hellospring_service_MemberService >
+public class MemberService {
+
+    private final MemberRepository memberRepository = new MemoryMemberRepository(); // 좌항 우항 다른거니까 이름 비슷하다고 헷갈리지말자!
+
+    public Long join(Member member) {  // 회원가입 기능중, 저장기능
+        // Optional<Member> result = memberRepository.findByName(member.getName());
+        // result.ifPresent(m -> {  // isPresent() 메소드를 사용하여 Optional 객체에 저장된 값이 null인지 아닌지를 먼저 확인한다. 즉, 값이 있다면 해당 로직을 실행한다.
+        // throw new IllegalStateException("이미 존재하는 회원입니다.");
+        // });
+        // 위의 코드 4줄을 줄여서 압축하면 밑의 메소드가 나온다.
+        validateDuplicateMember(member);  // 같은 이름의 중복 회원 검증  // 참고로 동일패키지 동일클래스라서 private인 메소드도 사용 가능하다.
+
+        memberRepository.save(member);
+        return member.getId();  // 회원가입을 하면, id값을 반환해준다.
+    }
+    private void validateDuplicateMember(Member member) {  // 회원가입 기능중, 같은 이름의 중복 회원 검증 기능
+        memberRepository.findByName(member.getName())
+                .ifPresent(m -> {  // isPresent() 메소드를 사용하여 Optional 객체에 저장된 값이 null인지 아닌지를 먼저 확인한다. 즉, 값이 있다면 해당 로직을 실행한다.
+                    throw new IllegalStateException("이미 존재하는 회원입니다.");
+                });
+    }
+
+    public List<Member> findMembers() {  // 전체 회원 조회 기능
+        return memberRepository.findAll();
+    }
+
+    public Optional<Member> findOne(Long memberId) {
+        return memberRepository.findById(memberId);
     }
 }
 
