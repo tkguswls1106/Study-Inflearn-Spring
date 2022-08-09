@@ -14,6 +14,8 @@
 - 같은이름의 변수명을 바꾸고싶을때는 키보드 커서를 해당 변수에 갖다놓고 shift + (fn) + F6 키를 누르고 이름을 변경하면 다같이 한번에 변경된다.
 - 예를들어 Optional<Member> result = memberRepository.findByName(member.getName()); 의 우항인 memberRepository.findByName(member.getName()); 만 작성해두고, command + option + v 키를 누르면 좌항이 Optional<Member> result 가 자동완성되고 이름을 지을 수 있다.
 - 따로 메소드를 빼서 만들어주고싶다면, 해당 작성한 메소드를 전부 드래그해놓고, control + t 키를 누르고 extract method 를 선택하면 된다. 아니면 그냥 드래그하고 command + option + m 키를 누르면 된다.
+- 테스트 클래스를 단축키로 간단하게 생성하려면, 코드 안의 클래스 위에 키보드 커서 올려두고 command + shift + t 키를 누르면 된다.
+- 이전에 실행한 Run을 그대로 실행하려면 control + r 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -199,7 +201,7 @@ public class MemoryMemberRepository implements MemberRepository {  // 인터페�
 
     @Override
     public Member save(Member member) {
-        member.setId(++sequence);  // member의 id로 ++sequence 를 저장하고,
+        member.setId(++sequence);  // member의 id로 ++sequence 를 저장하고,  // 메소드 매개변수 안에 Member member가 적혀있으므로, 따로 new로 생성해주지 않고 바로 사용하면 된다.
         store.put(member.getId(), member);  // 방금 저장한 id를 불러와서 그걸 키로 넣고, 값으로 member을 넣어서, 구조체처럼 store라는 이름의 메모리구현체에 키값쌍정보를 DB처럼 저장함.
         return member;  // 저장한 회원정보 반환.
     }
@@ -245,7 +247,7 @@ class MemoryMemberRepositoryTest {
 
     @Test
     public void save() {  // 실행시켜서 녹색이 뜨면 정상실행 검사 성공. 참고로 이처럼 메소드별 검사도 가능하고, 클래스나 전체 등등 여러 범위로 검사 실행이 가능하다.
-        Member member = new Member();
+        Member member = new Member();  // 메소드 매개변수 안에 Member member가 적혀있지않으므로, 따로 new로 생성해주고 사용해야만 한다.
         member.setName("spring");
 
         repository.save(member);
@@ -295,7 +297,12 @@ class MemoryMemberRepositoryTest {
 < main_hellospring_service_MemberService >
 public class MemberService {
 
-    private final MemberRepository memberRepository = new MemoryMemberRepository(); // 좌항 우항 다른거니까 이름 비슷하다고 헷갈리지말자!
+    // private final MemberRepository memberRepository = new MemoryMemberRepository(); // 좌항 우항 다른거니까 이름 비슷하다고 헷갈리지말자!
+    private final MemberRepository memberRepository;
+    public MemberService(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }  // 이 코드 대신 위의 주석처리된 코드로 쓰면 각 테스트마다 DB저장소가 개별의 것으로 점점 늘어나니까, 하나의 DB 저장소 사용으로 변경해주기위해 이 코드로 대신 작성해준다.
+    // 이처럼 외부에서 저장소를 넣어주는것을 DI라고 한다.
 
     public Long join(Member member) {  // 회원가입 기능중, 저장기능
         // Optional<Member> result = memberRepository.findByName(member.getName());
@@ -321,6 +328,71 @@ public class MemberService {
 
     public Optional<Member> findOne(Long memberId) {
         return memberRepository.findById(memberId);
+    }
+}
+
+------------------------------------------------
+
+---------- '회원 서비스 테스트' 강의 부분 필기 ----------
+
+< test_hellospring_service_MemberServiceTest >
+class MemberServiceTest {
+
+    // MemoryMemberRepository memberRepository = new MemoryMemberRepository();
+    MemoryMemberRepository memberRepository;
+    // MemberService memberService = new MemberService(memberRepository);
+    MemberService memberService;
+
+    @BeforeEach  // BeforeEach는 클래스 테스트 실행시, 각 테스트 메소드들이 실행되기 전에 미리 앞서서 어떠한 동작을 실행할수있게 해주는 역할이다.
+    public void beforeEach() {
+        memberRepository = new MemoryMemberRepository();
+        memberService = new MemberService(memberRepository);
+    }
+
+    @AfterEach  // AfterEach는 클래스 테스트 실행시, 각 메소드들이 실행이 끝날때마다 어떠한 동작을 실행할수있게 해주는 역할이다.
+    public void afterEach() {
+        memberRepository.clearStore();  // 이는 MemoryMemberRepository 클래스 안에 clearStore 메소드를 적어주고 코드를 적은것이다.
+    }
+
+    @Test
+    void 회원가입() {  // 사실 테스트의 메소드명은 한글로 만들어도 된다.
+        // given  // 1. 테스트에서 이러한 것이 주어졌는데
+        Member member = new Member();
+        member.setName("hello");
+
+        // when  // 2. 이것을 실행했을때
+        Long saveId = memberService.join(member);  // 테스트로 memberService의 join 메소드를 검증하겠다
+
+        // then  // 3. 이러한 결과가 나와야한다
+        Member findMember = memberService.findOne(saveId).get();
+        assertThat(member.getName()).isEqualTo(findMember.getName());  // 여기의 Assertions는 assertj 꺼다. option + enter 로 스태틱 임포트 해주면 된다.
+    }
+
+    @Test
+    public void 중복_회원_예외() {
+        // given
+        Member member1 = new Member();
+        member1.setName("spring");
+
+        Member member2 = new Member();
+        member2.setName("spring");
+
+        // when
+        memberService.join(member1);
+        IllegalStateException e = assertThrows(IllegalStateException.class,  // assertThrows 메소드는 첫번째 인자로 발생할 예외 클래스의 Class 타입을 받고, 두번째 인자에서 예외 발생시 그 예외가 앞의 예외class와 동일한것인지 체크한다.
+                () -> memberService.join(member2));// memberService.join(member2) 를 실행할때, 예외가 발생시 예외class타입을 반환함.
+
+        assertThat(e.getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+
+        /*
+        // 여기서 try ~ catch 사용 가능하긴함
+        try {
+            memberService.join(member2);
+            fail();
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage()).isEqualTo("이미 존재하는 회원입니다.");
+        }
+        */
     }
 }
 
