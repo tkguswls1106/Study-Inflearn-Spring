@@ -11,11 +11,13 @@
 - getter setter 같은거 사용할때에는 control + enter 키를 누르면 된다.
 - implements로 인터페이스 상속시에 메소드들 불러올때 option + enter 키를 누르면 된다.
 - 듣기론 import는 control + space 또는 option + enter 키를 누르면 된다고 한다.
+- 연결된 변수나 클래스명 같은걸 코드를 보고싶을때는, 해당 변수 위에 command + 마우스클릭 을 하면 된다.
 - 같은이름의 변수명을 바꾸고싶을때는 키보드 커서를 해당 변수에 갖다놓고 shift + (fn) + F6 키를 누르고 이름을 변경하면 다같이 한번에 변경된다.
 - 예를들어 Optional<Member> result = memberRepository.findByName(member.getName()); 의 우항인 memberRepository.findByName(member.getName()); 만 작성해두고, command + option + v 키를 누르면 좌항이 Optional<Member> result 가 자동완성되고 이름을 지을 수 있다.
 - 따로 메소드를 빼서 만들어주고싶다면, 해당 작성한 메소드를 전부 드래그해놓고, control + t 키를 누르고 extract method 를 선택하면 된다. 아니면 그냥 드래그하고 command + option + m 키를 누르면 된다.
 - 테스트 클래스를 단축키로 간단하게 생성하려면, 코드 안의 클래스 위에 키보드 커서 올려두고 command + shift + t 키를 누르면 된다.
 - 이전에 실행한 Run을 그대로 실행하려면 control + r 키를 누르면 된다.
+- 예를들어 의존관계 DI 형성할때처럼, 작성한 코드를 이용하여 관련 생성자(Constructor)를 만들고싶다면, control + enter 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -298,11 +300,14 @@ class MemoryMemberRepositoryTest {
 public class MemberService {
 
     // private final MemberRepository memberRepository = new MemoryMemberRepository(); // 좌항 우항 다른거니까 이름 비슷하다고 헷갈리지말자!
-    private final MemberRepository memberRepository;
-    public MemberService(MemberRepository memberRepository) {
+    private final MemberRepository memberRepository;  // private final로 선언한다면 직접적으로 값을 참조할 수는 없지만 생성자를 통해 매개변수로 넣어 값을 참조할 수 있다. 각각 생성자 메소드 매개변수 별로 호출할 때마다 새로이 값이 할당(인스턴스화)된다.
+                                                      // 반면에 private static final을 선언한 변수를 사용하면 재할당하지 못하며, 메모리에 한 번 올라가면 같은 값을 클래스 내부의 전체 필드, 메서드에서 공유한다.
+                                                      // 쉽게 설명하자면, 예를들어 조금씩 다르게 생긴 여러 생성자 메소드들을 생성하였을때, private final 은 각각 메소드별로 별개의 값으로 사용이 가능하지만, private static final 은 통합적인 같은값으로 관리된다는 것이다.
+    public MemberService(MemberRepository memberRepository) {  // MemberRepository 매개변수를 가진 생성자 MemberService 메소드를 적어주어, MemberService를 MemberRepository에 연결하여 의존관계를 형성하였다. (DI)
+                                                               // 이처럼 객체 의존관계를 외부에서 넣어주는 것을 DI (Dependency Injection), 의존성 주입이라 한다.
         this.memberRepository = memberRepository;
     }  // 이 코드 대신 위의 주석처리된 코드로 쓰면 각 테스트마다 DB저장소가 개별의 것으로 점점 늘어나니까, 하나의 DB 저장소 사용으로 변경해주기위해 이 코드로 대신 작성해준다.
-    // 이처럼 외부에서 저장소를 넣어주는것을 DI라고 한다.
+    // 이처럼 외부에서 저장소를 넣어주는것도 DI 이다.
 
     public Long join(Member member) {  // 회원가입 기능중, 저장기능
         // Optional<Member> result = memberRepository.findByName(member.getName());
@@ -395,6 +400,50 @@ class MemberServiceTest {
         */
     }
 }
+
+------------------------------------------------
+
+---- '컴포넌트 스캔과 자동 의존관계 설정' 강의 부분 필기 ----
+
+스프링 컨테이너는 자바 객체의 생명 주기를 관리하며, 생성된 자바 객체들에게 추가적인 기능을 제공하는 역할을 한다.
+여기서 말하는 자바 객체를 스프링에서는 빈(Bean)이라고 부르며, IoC와 DI의 원리가 이 스프링 컨테이너에 적용된다.
+개발자는 new 연산자, 인터페이스 호출, 팩토리 호출 방식으로 객체를 생성하고 소멸시킬 수 있는데, 스프링 컨테이너가 이 역할을 대신해 준다.
+즉, 제어 흐름을 외부에서 관리하며 작성한 코드의 처리과정을 위임받은 독립적인 존재인것이다.
+또한, 중요한점은 객체들 간의 의존 관계를 스프링 컨테이너가 런타임 과정에서 알아서 만들어 주며, DI는 생성자, setter, @Autowired를 통해 적용한다.
+참고로 main_hellospring_controller_HelloController 는 스프링이 제공하는 컨트롤러여서 스프링 빈으로 자동 등록된다.
+@Controller 가 있으면 자동 등록되긴 하는데, 만약 안붙어있으면 따로 스프링 빈에 등록해주어야한다.
+@Component 어노테이션이 있으면 스프링 빈으로 자동 등록되는데, 그걸 포함한 @Controller, @Service, @Repository 도 마찬가지로 자동등록 된다.
+즉, 과정은 스프링 컨테이너에서 스프링 빈 등록되어있는것들중에서 의존관계 코드가 적혀있는것들끼리 알아서 연결해준다는 것이다.
+이러한 방법은 스프링 빈을 등록하는 2가지 방법중에서, '컴포넌트 스캔과 자동 의존관계 설정' 방법에 해당하는 방법이다.
+참고로 다른 나머지 하나의 방법은, '자바 코드로 직접 스프링 빈 등록하기'이다.
+참고로 스프링은 스프링 컨테이너에 스프링 빈을 등록할 때, 기본으로 싱글톤으로 등록한다(각각 유일하게 하나씩만 등록해서 공유한다).
+
+여기서는 의존관계가 'MemberController' -> 'MemberService' -> 'DI 어노테이션은 구현체인 MemoryMemberRepository에 적고, 관계상으로는 MemberRepository' 이렇게 연결되어있다.
+
+< main_hellospring_controller_MemberController >
+@Controller
+public class MemberController {
+
+    // private final MemberService memberService = new MemberService();
+
+    private final MemberService memberService;
+    @Autowired  // 생성자에 @Autowired 가 있으면, 스프링이 연관된 객체를 스프링 컨테이너에서 찾아서 넣어준다. 이는 객체 의존관계를 외부에서 넣어주는 것인 DI이다.
+    // 스프링 컨테이너가 뜰때 클래스 MemberController를 생성해주는데, 그때 MemberController 생성자 호출을 하게된다.
+    // 그런데 그 생성자에 @Autowired 가 붙어있으면, 스프링이 스프링 컨테이너에 저장된 MemberService를 가져와서 의존성 연결을 MemberController에다가 해준다.
+    // 하지만 이는 혹여나 MemberService를 스프링 컨테이너에 스프링 빈으로 등록(저장)해두지 않은상태에서 @Autowired로 의존관계 연결해주고 Run을 하게된다면, 에러가 발생하게 된다.
+    // 그러므로 MemberService 클래스는 HelloController도 아니고, @Controller 등등의 어노테이션도 안붙어있기때문에, 따로 스프링 빈에 등록해주는 코드를 작성해주어야 정상적인 Run이 가능하다.
+    public MemberController(MemberService memberService) {  // MemberService 매개변수를 가진 생성자 MemberController 메소드를 적어주어, MemberController를 MemberService에 연결하여 의존관계를 형성하였다. (DI)
+        this.memberService = memberService;
+    }
+}
+
+< main_hellospring_service_MemberService >
+스프링 빈 등록을 위해
+@Service 와 @Autowired 를 추가함.
+
+< main_hellospring_repository_MemoryMemberRepository >
+스프링 빈 등록을 위해
+@Repository 를 추가함.
 
 ------------------------------------------------
 
