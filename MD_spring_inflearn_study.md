@@ -519,4 +519,67 @@ public class SpringConfig {
 
 ------------------------------------------------
 
+--------- '회원 웹 기능 - 등록' 강의 부분 필기 ---------
+
+<라우팅 과정>
+사용자가 /members/new 링크로 접속
+->
+main_hellospring_controller_MemberController 의 @GetMapping("/members/new") 부분의 코드 실행
+->
+return "members/createMemberForm"; 로 인하여 main_templates_members_createMemberForm.html 파일로 이동하여, 겉폼양식 출력
+->
+input name의 입력할데이터 입력하고 summit 버튼으로 post방식으로 데이터 전달함
+->
+main_hellospring_controller_MemberController 의 @PostMapping("/members/new") 부분의 코드 실행
+->
+가져온데이터가 main_hellospring_controller_MemberForm 의 객체 형태(MemberForm form)로 저장되어, @PostMapping("/members/new") 부분의 메소드의 매개변수로 할당됨.
+->
+멤버 객체를 생성하고,
+매개변수로 가져온 form의 name 정보를 getName으로 가져와서,
+그 name 정보를 멤버 객체에 setName으로 저장함.
+그리고 완성된 멤버 객체를 멤버서비스의 join메소드로 회원가입 기능을 실행함. 즉, 회원 데이터 저장.
+마지막으로 return "redirect:/";으로, 홈화면으로 리다이렉트하여 보내버림.
+
+< main_hellospring_controller_MemberController 추가작성 코드 >
+@Controller
+public class MemberController {
+
+    @GetMapping("/members/new")  // method='get' 방식일때
+    public String createForm() {
+        return "members/createMemberForm";
+    }
+
+    @PostMapping("/members/new")  // method='post' 방식일때
+    public String create(MemberForm form) {
+        Member member = new Member();  // 멤버 객체를 생성하고,
+        member.setName(form.getName());  // 매개변수로 가져온 form의 name 정보를 getName으로 가져와서, 그 name 정보를 멤버 객체에 setName으로 저장함.
+
+        memberService.join(member);  // 완성된 멤버 객체를 멤버서비스의 join메소드로 회원가입 기능을 실행함. 즉, 회원 데이터 저장.
+
+        return "redirect:/";  // 홈화면으로 리다이렉트하여 보내버림.
+    }
+}
+
+< main_templates_members_createMemberForm.html 코드 중요한거만 요약 >
+<form action="/members/new" method="post">
+  <input type="text" id="name" name="name" placeholder="이름을 입력하세요">  <!-- name="name" 에 주목해야한다. -->
+  <button type="submit">등록</button>
+</form>
+
+< main_hellospring_controller_MemberForm >
+public class MemberForm {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+------------------------------------------------
+
+
 ```
