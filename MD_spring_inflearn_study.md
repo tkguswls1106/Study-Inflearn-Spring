@@ -18,6 +18,7 @@
 - 테스트 클래스를 단축키로 간단하게 생성하려면, 코드 안의 클래스 위에 키보드 커서 올려두고 command + shift + t 키를 누르면 된다.
 - 이전에 실행한 Run을 그대로 실행하려면 control + r 키를 누르면 된다.
 - 예를들어 의존관계 DI 형성할때처럼, 작성한 코드를 이용하여 관련 생성자(Constructor)를 만들고싶다면, control + enter 키를 누르면 된다.
+- 가장 최근에 봤던 파일들 목록들을 최근순으로 보려면 command + e 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -521,7 +522,7 @@ public class SpringConfig {
 
 --------- '회원 웹 기능 - 등록' 강의 부분 필기 ---------
 
-<라우팅 과정>
+< /members/new 링크 회원가입 절차 라우팅 과정 >
 사용자가 /members/new 링크로 접속
 ->
 main_hellospring_controller_MemberController 의 @GetMapping("/members/new") 부분의 코드 실행
@@ -581,5 +582,26 @@ public class MemberForm {
 
 ------------------------------------------------
 
+--------- '회원 웹 기능 - 조회' 강의 부분 필기 ---------
+
+< main_hellospring_controller_MemberController 추가작성 코드 >
+@Controller
+public class MemberController {
+
+    @GetMapping("/members")
+    public String list(Model model) {
+        List<Member> members = memberService.findMembers();
+        model.addAttribute("members", members);
+        return "members/memberList";
+    }
+}
+
+< main_templates_members_memberList.html 코드 중요한거만 요약 >
+<tr th:each="member : ${members}">  <!-- 장고 템플릿 코드 for 문이랑 비슷하고, 거기에 향상된 for문을 응용시킨것 같다. -->
+  <td th:text="${member.id}"></td>
+  <td th:text="${member.name}"></td>
+</tr>
+
+------------------------------------------------
 
 ```
