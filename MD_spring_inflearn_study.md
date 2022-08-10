@@ -301,10 +301,10 @@ public class MemberService {
 
     // private final MemberRepository memberRepository = new MemoryMemberRepository(); // 좌항 우항 다른거니까 이름 비슷하다고 헷갈리지말자!
     private final MemberRepository memberRepository;  // private final로 선언한다면 직접적으로 값을 참조할 수는 없지만 생성자를 통해 매개변수로 넣어 값을 참조할 수 있다. 각각 생성자 메소드 매개변수 별로 호출할 때마다 새로이 값이 할당(인스턴스화)된다.
-                                                      // 반면에 private static final을 선언한 변수를 사용하면 재할당하지 못하며, 메모리에 한 번 올라가면 같은 값을 클래스 내부의 전체 필드, 메서드에서 공유한다.
+                                                      // 반면에 private static final을 선언한 변수를 사용하면 재할당하지 못하며, 메모리에 한 번 올라가면 같은 값을 클래스 내부의 전체 필드, 메소드에서 공유한다.
                                                       // 쉽게 설명하자면, 예를들어 조금씩 다르게 생긴 여러 생성자 메소드들을 생성하였을때, private final 은 각각 메소드별로 별개의 값으로 사용이 가능하지만, private static final 은 통합적인 같은값으로 관리된다는 것이다.
     public MemberService(MemberRepository memberRepository) {  // MemberRepository 매개변수를 가진 생성자 MemberService 메소드를 적어주어, MemberService를 MemberRepository에 연결하여 의존관계를 형성하였다. (DI)
-                                                               // 이처럼 객체 의존관계를 외부에서 넣어주는 것을 DI (Dependency Injection), 의존성 주입이라 한다.
+                                                               // 이처럼 객체 의존관계를 외부에서 넣어주는 것을 DI (Dependency Injection), 의존성 주입이라 한다. 참고로 이건 DI 방법중 생성자 주입 방법이다.
         this.memberRepository = memberRepository;
     }  // 이 코드 대신 위의 주석처리된 코드로 쓰면 각 테스트마다 DB저장소가 개별의 것으로 점점 늘어나니까, 하나의 DB 저장소 사용으로 변경해주기위해 이 코드로 대신 작성해준다.
     // 이처럼 외부에서 저장소를 넣어주는것도 DI 이다.
@@ -409,7 +409,7 @@ class MemberServiceTest {
 여기서 말하는 자바 객체를 스프링에서는 빈(Bean)이라고 부르며, IoC와 DI의 원리가 이 스프링 컨테이너에 적용된다.
 개발자는 new 연산자, 인터페이스 호출, 팩토리 호출 방식으로 객체를 생성하고 소멸시킬 수 있는데, 스프링 컨테이너가 이 역할을 대신해 준다.
 즉, 제어 흐름을 외부에서 관리하며 작성한 코드의 처리과정을 위임받은 독립적인 존재인것이다.
-또한, 중요한점은 객체들 간의 의존 관계를 스프링 컨테이너가 런타임 과정에서 알아서 만들어 주며, DI는 생성자, setter, @Autowired를 통해 적용한다.
+또한, 중요한점은 객체들 간의 의존 관계를 스프링 컨테이너가 런타임 과정에서 알아서 만들어 주며, DI는 '생성자 주입', 'setter 주입', 그냥 필드에다가 @Autowired를 적는 '필드 주입'의 3가지 방법을 통해 적용한다.
 참고로 main_hellospring_controller_HelloController 는 스프링이 제공하는 컨트롤러여서 스프링 빈으로 자동 등록된다.
 @Controller 가 있으면 자동 등록되긴 하는데, 만약 안붙어있으면 따로 스프링 빈에 등록해주어야한다.
 @Component 어노테이션이 있으면 스프링 빈으로 자동 등록되는데, 그걸 포함한 @Controller, @Service, @Repository 도 마찬가지로 자동등록 된다.
@@ -419,6 +419,10 @@ class MemberServiceTest {
 참고로 스프링은 스프링 컨테이너에 스프링 빈을 등록할 때, 기본으로 싱글톤으로 등록한다(각각 유일하게 하나씩만 등록해서 공유한다).
 
 여기서는 의존관계가 'MemberController' -> 'MemberService' -> 'DI 어노테이션은 구현체인 MemoryMemberRepository에 적고, 관계상으로는 MemberRepository' 이렇게 연결되어있다.
+
+@Controller 이나 @Service 이나 @Repository 로 스프링 빈에 등록하지 않았다면,
+@Autowired 을 작성하여 연결해주려고해도 스프링 빈에서 꺼내올 빈이 없기때문에 연결되지 않는다.
+그러니까 꼭 스프링 빈 등록코드와 연결 코드를 모두 작성해주도록 하자.
 
 < main_hellospring_controller_MemberController >
 @Controller
@@ -432,7 +436,7 @@ public class MemberController {
     // 그런데 그 생성자에 @Autowired 가 붙어있으면, 스프링이 스프링 컨테이너에 저장된 MemberService를 가져와서 의존성 연결을 MemberController에다가 해준다.
     // 하지만 이는 혹여나 MemberService를 스프링 컨테이너에 스프링 빈으로 등록(저장)해두지 않은상태에서 @Autowired로 의존관계 연결해주고 Run을 하게된다면, 에러가 발생하게 된다.
     // 그러므로 MemberService 클래스는 HelloController도 아니고, @Controller 등등의 어노테이션도 안붙어있기때문에, 따로 스프링 빈에 등록해주는 코드를 작성해주어야 정상적인 Run이 가능하다.
-    public MemberController(MemberService memberService) {  // MemberService 매개변수를 가진 생성자 MemberController 메소드를 적어주어, MemberController를 MemberService에 연결하여 의존관계를 형성하였다. (DI)
+    public MemberController(MemberService memberService) {  // MemberService 매개변수를 가진 생성자 MemberController 메소드를 적어주어, MemberController를 MemberService에 연결하여 의존관계를 형성하였다. (DI 방법중 생성자 주입 방법)
         this.memberService = memberService;
     }
 }
@@ -457,6 +461,59 @@ public class MemberService {
 @Repository  // 스프링 컨테이너에 스프링 빈으로 등록하게 해줌.
 public class MemoryMemberRepository implements MemberRepository {
 }
+
+------------------------------------------------
+
+--- '자바 코드로 직접 스프링 빈 등록하기' 강의 부분 필기 ---
+
+DI에는 필드 주입, setter 주입, 생성자 주입 이렇게 3가지 방법이 있다.
+의존관계가 실행중에 동적으로 변하는 경우는 거의 없으므로 생성자 주입 방법을 권장한다.
+
+실무에서는 주로 정형화된 컨트롤러, 서비스, 리포지토리 같은 코드는 컴포넌트 스캔 방법을 사용한다.
+그리고 정형화 되지 않거나, 상황에 따라 구현 클래스를 변경해야 하면 config 설정을 통한 직접 스프링 빈 등록방법으로 사용한다.
+후자의 예시로 우리가 지금까지 했던 데이터베이스 종류를 정하지않고 임시적으로 메모리레포지토리를 만들어 사용하였는데, 이걸 나중에 정한 데이터베이스로 다른 여러 코드를 손대지않고 간단하게 저장소 종류를 바꿔치기할것이다. 이게 바로 특정 상황에 따라 메모리레포지토리 구현 클래스를 변경하는 예시이므로, 이러한 예시의 상황에는 직접 스프링 빈 등록방법을 사용하는것이 config 코드만 조금 수정하면 되는일이라 더욱 간편하다.
+
+'어노테이션으로 자동 의존관계 연결하고 스프링 빈을 등록하는 방법(=컴포넌트 스캔 방법)' 말고, '자바 코드로 직접 스프링 빈 등록하기' 방법을 사용하기 위하여
+위 강의에서 추가해둔 코드인
+회원 서비스(main_hellospring_service_MemberService)와
+회원 리포지토리(main_hellospring_repository_MemoryMemberRepository)의
+@Service, @Repository, @Autowired 어노테이션 코드를 제거하고 코드작성을 진행한다.
+
+< main_hellospring_SpringConfig >
+@Configuration
+public class SpringConfig {
+
+    @Bean  // 스프링 빈을 내가 직접 등록할거야 라는 의미이다.
+    public MemberService memberService() {  // public 메소드반환자료형 메소드명()  // memberService()는 생성자 아니니까 헷갈리지말자!
+        return new MemberService(memberRepository());
+    }
+
+    @Bean
+    public MemberRepository memberRepository() {  // public 메소드반환자료형 메소드명()  // memberRepository()는 생성자 아니니까 헷갈리지말자!
+        return new MemoryMemberRepository();  // MemberRepository는 인터페이스이기때문에 new로 인스턴스 생성이 불가능하므로, 메모리구현체인 new MemoryMemberRepository() 를 반환한다.
+    }
+}
+
+/*
+직접 스프링 빈 등록 및 연결 과정(컨트롤러는 어쩔수없이 컴포넌트 스캔 방법 사용):
+
+< main_hellospring_controller_MemberController 에서 >
+@Controller 이라서 어쩔수없이 @Autowired로 컴포넌트 스캔 방법으로 MemberController을 MemberService에 연결함.
+
+->
+
+< main_hellospring_SpringConfig 에서 >
+@Configuration을 봄
+-> @Bean을 봄
+-> MemberService와 MemberRepository를 모두 스프링 빈으로 등록
+
+->
+
+< main_hellospring_service_MemberService 에서 (main_hellospring_SpringConfig 에서 확인해도 되긴함) >
+스프링 빈에 등록되어있는 MemberRepository를, 생성자메소드 MemberService()안의 매개변수로 넣어줌으로써, 어노테이션 자동 의존관계 연결(컴포넌트 스캔 방법)없이 직접 연결해주게 되는 것이다.
+
+결국 의존관계가 'MemberController' -> 'MemberService' -> MemberRepository' 이렇게 연결되게 되었다.
+*/
 
 ------------------------------------------------
 
