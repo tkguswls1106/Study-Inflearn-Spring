@@ -441,9 +441,22 @@ public class MemberController {
 스프링 빈 등록을 위해
 @Service 와 @Autowired 를 추가함.
 
+@Service  // 스프링 컨테이너에 스프링 빈으로 등록하게 해줌.
+public class MemberService {
+    private final MemberRepository memberRepository;
+    @Autowired  // 생성자에 @Autowired 가 있으면, 스프링이 연관된 객체를 스프링 컨테이너에서 찾아서 넣어준다. 이는 객체 의존관계를 외부에서 넣어주는 것인 DI이다.
+    public MemberService(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
+}
+
 < main_hellospring_repository_MemoryMemberRepository >
 스프링 빈 등록을 위해
 @Repository 를 추가함.
+
+@Repository  // 스프링 컨테이너에 스프링 빈으로 등록하게 해줌.
+public class MemoryMemberRepository implements MemberRepository {
+}
 
 ------------------------------------------------
 
