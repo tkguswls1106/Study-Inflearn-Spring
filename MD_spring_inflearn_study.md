@@ -235,6 +235,8 @@ public class MemoryMemberRepository implements MemberRepository {  // 인터페�
 
 ---- '회원 리포지토리 테스트 케이스 작성' 강의 부분 필기 ----
 
+여기 부분은 Spring 사용없이 순수한 자바 코드만으로 이루어져있으므로, @SpringBootTest를 적지않아도 된다.
+
 < test_hellospring_repository_MemoryMemberRepositoryTest >
 class MemoryMemberRepositoryTest {
 
@@ -342,6 +344,8 @@ public class MemberService {
 ------------------------------------------------
 
 ---------- '회원 서비스 테스트' 강의 부분 필기 ----------
+
+여기 부분은 Spring 사용없이 순수한 자바 코드만으로 이루어져있으므로, @SpringBootTest를 적지않아도 된다.
 
 < test_hellospring_service_MemberServiceTest >
 class MemberServiceTest {
@@ -627,6 +631,9 @@ select * from member; (이거는 아무것도 적지말고 옆의 MEMBER 클릭�
 < member 테이블에 name='spring' 데이터 insert (첫데이터면 ID=1)>
 insert into member(name) values('spring')
 
+< member 테이블 데이터 전체 삭제 >
+delete from member
+
 ------------------------------------------------
 
 ------------- '순수 JDBC' 강의 부분 필기 -------------
@@ -637,6 +644,19 @@ insert into member(name) values('spring')
 main_resources_application.properties 파일에 코드 작성.
 main_hellospring_repository_JdbcMemberRepository 클래스 파일 생성하고, 코드 작성.
 main_hellospring_SpringConfig 파일 코드 수정 및 추가.
+
+
+< main_hellospring_repository_JdbcMemberRepository 코드 중요한거만 요약 >
+public class JdbcMemberRepository implements MemberRepository {
+
+    private final DataSource dataSource;  // control + enter 키 입력
+
+    public JdbcMemberRepository(DataSource dataSource) {  // 메모리 구현이 아닌, DB로 연결
+        this.dataSource = dataSource;
+    }
+
+    // 나머지 오버라이딩이나 클로즈 코드들 구현하면 됨.
+}
 
 < main_hellospring_SpringConfig 추가작성 및 수정 코드 >
 @Configuration
@@ -654,6 +674,27 @@ public class SpringConfig {
     public MemberRepository memberRepository() {
         return new JdbcMemberRepository(dataSource);  // 이로써 MemoryMemberRepository 를 Jdbc 데이터베이스로 교체하였음.
     }
+}
+
+------------------------------------------------
+
+---------- '스프링 통합 테스트' 강의 부분 필기 ----------
+
+< test_hellospring_service_MemberServiceIntegrationTest 추가작성 및 수정 코드 >
+// test_hellospring_service_MemberServiceTest 클래스 파일을 복사해와서 수정하였음.
+@SpringBootTest  // 스프링 컨테이너와 테스트를 함께 실행한다. 즉, 이전에 해보았던 다른 test들과는 다르게, Spring을 사용하므로 @SpringBootTest 를 적어주어야 한다.
+@Transactional  // 테스트 케이스에 @Transactional 를 적어주면 테스트 시작 전에 트랜잭션을 시작하고, 테스트 완료 후에 항상 롤백한다.
+                // 이렇게 하면 DB에 데이터가 남지 않으므로 다음 테스트에 영향을 주지 않는다.
+                // 덕분에 @AfterEach로 DB 초기화를 시켜주는 코드를 작성하지 않아도 된다.
+class MemberServiceIntegrationTest {
+
+    // MemberRepository memberRepository = new JdbcMemberRepository(dataSource);
+    @Autowired MemberRepository memberRepository;  // MemoryMemberRepository가 아닌, MemberRepository로 코드를 수정한다.
+                                                   // 그 이유는 main_hellospring_SpringConfig 의 코드를 jdbc 연결로 변경했기때문이다.
+    // MemberService memberService = new MemberService(memberRepository);
+    @Autowired MemberService memberService;
+
+// @BeforeEach와 @AfterEach 코드부분 삭제했음. 나머지 @Test 코드 부분들은 동일함.
 }
 
 ------------------------------------------------
