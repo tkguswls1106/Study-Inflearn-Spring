@@ -631,10 +631,11 @@ insert into member(name) values('spring')
 
 ------------- '순수 JDBC' 강의 부분 필기 -------------
 
+참고로 해당 강의 부분의 '순수 JDBC' DB 사용방법은 옛날식의 방법으로, 요즘은 쓰이지 않는 방법이다.
+그러므로 어느정도 이렇다만 알아둬도 된다고 한다.
+
 main_resources_application.properties 파일에 코드 작성.
-
 main_hellospring_repository_JdbcMemberRepository 클래스 파일 생성하고, 코드 작성.
-
 main_hellospring_SpringConfig 파일 코드 수정 및 추가.
 
 < main_hellospring_SpringConfig 추가작성 및 수정 코드 >
