@@ -629,4 +629,32 @@ insert into member(name) values('spring')
 
 ------------------------------------------------
 
+------------- '순수 JDBC' 강의 부분 필기 -------------
+
+main_resources_application.properties 파일에 코드 작성.
+
+main_hellospring_repository_JdbcMemberRepository 클래스 파일 생성하고, 코드 작성.
+
+main_hellospring_SpringConfig 파일 코드 수정 및 추가.
+
+< main_hellospring_SpringConfig 추가작성 및 수정 코드 >
+@Configuration
+public class SpringConfig {
+
+    // 코드 추가 부분
+    private DataSource dataSource;
+    @Autowired
+    public SpringConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    // 코드 수정 부분
+    @Bean
+    public MemberRepository memberRepository() {
+        return new JdbcMemberRepository(dataSource);  // 이로써 MemoryMemberRepository 를 Jdbc 데이터베이스로 교체하였음.
+    }
+}
+
+------------------------------------------------
+
 ```
