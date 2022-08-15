@@ -19,6 +19,7 @@
 - 이전에 실행한 Run을 그대로 실행하려면 control + r 키를 누르면 된다.
 - 예를들어 의존관계 DI 형성할때처럼, 작성한 코드를 이용하여 관련 생성자(Constructor)를 만들고싶다면, control + enter 키를 누르면 된다.
 - 가장 최근에 봤던 파일들 목록들을 최근순으로 보려면 command + e 키를 누르면 된다.
+- return 문에 람다식 적용시키고 싶다면 해당 부분에 키보드 커서 올려두고, option + enter 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -641,16 +642,26 @@ delete from member
 참고로 해당 강의 부분의 '순수 JDBC' DB 사용방법은 옛날식의 방법으로, 요즘은 쓰이지 않는 방법이다.
 그러므로 어느정도 이렇다만 알아둬도 된다고 한다.
 
+@Autowired 는
+스프링 4.3버전부터
+생성자 DI 방법으로 의존관계 형성할때,
+생성자가 하나이고 그 생성자의 파라미터가 빈에 등록되어있는 상태라면,
+@Autowired 를 생략하고 적지않아도 된다고 한다.
+참고로 스프링 부트의 경우 DataSource 같은 DB Connection에 사용하는 기술 지원 로직까지 내부에서 자동으로 빈으로 컨테이너에 등록해준다.
+
 main_resources_application.properties 파일에 코드 작성.
 main_hellospring_repository_JdbcMemberRepository 클래스 파일 생성하고, 코드 작성.
 main_hellospring_SpringConfig 파일 코드 수정 및 추가.
 
-
 < main_hellospring_repository_JdbcMemberRepository 코드 중요한거만 요약 >
 public class JdbcMemberRepository implements MemberRepository {
 
-    private final DataSource dataSource;  // control + enter 키 입력
+    private final DataSource dataSource;  // DB에 연결하려면 DataSource 라는것이 필요하다. 스프링을 통해서 데이터소스를 주입받을것이다. 예를들어 dataSource.getConnection() 같은 걸로.
+    // control + enter 키 입력
 
+    // @Autowired를 생략하였다.
+    // 스프링 부트의 경우 DataSource 같은 DB Connection에 사용하는 기술 지원 로직까지 내부에서 자동으로 빈으로 컨테이너에 등록하기때문에,
+    // 생성자가 하나이고 그 생성자의 파라미터가 빈에 등록되어있는 상태라면, @Autowired를 생략 가능하다라는 조건에 충족하여, @Autowired를 생략한것이다.
     public JdbcMemberRepository(DataSource dataSource) {  // 메모리 구현이 아닌, DB로 연결
         this.dataSource = dataSource;
     }
@@ -696,6 +707,76 @@ class MemberServiceIntegrationTest {
 
 // @BeforeEach와 @AfterEach 코드부분 삭제했음. 나머지 @Test 코드 부분들은 동일함.
 }
+
+------------------------------------------------
+
+-------- '스프링 JdbcTemplate' 강의 부분 필기 --------
+
+query() 메소드는 sql 파라미터로 전달받은 쿼리를 실행하고 RowMapper를 이용해서 ResultSet의 결과를 자바 객체로 변환한다.
+dbcTemplate.query()는 List<Member> 형태를 반환한다.
+RowMapper 인터페이스의 mapRow() 메소드는 SQL 실행 결과로 구한 ResultSet에서 한 행의 데이터를 읽어와 자바 객체로 변환하는 매퍼 기능을 구현한다.
+
+List<Member> result = jdbcTemplate.query("select * from member where id = ?", memberRowMapper(), id);  // 첫번째 파라미터는 sql 쿼리의 ?물음표 부분에, memberRowMapper()로 불러온 ResultSet의 member 객체의 id값을 집어넣는다.
+        return result.stream().findAny();  // 그러면 완성된 쿼리(반환 자료형은 리스트)로 DB에 적용시켜 DB에서 찾아봄.
+
+< main_hellospring_repository_JdbcTemplateMemberRepository 코드 중요한거만 요약 >
+import javax.sql.DataSource;  // 메모리 구현이 아닌, DB로 연결
+
+public class JdbcTemplateMemberRepository implements MemberRepository {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    // @Autowired를 생략할 수 있다.
+    // 스프링 부트의 경우 DataSource 같은 DB Connection에 사용하는 기술 지원 로직까지 내부에서 자동으로 빈으로 컨테이너에 등록하기때문에,
+    // 생성자가 하나이고 그 생성자의 파라미터가 빈에 등록되어있는 상태라면, @Autowired를 생략 가능하다라는 조건에 충족하여, @Autowired를 생략할 수 있다.
+    public JdbcTemplateMemberRepository(DataSource dataSource) {  // DataSource를 인젝션 받는다.
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+
+    @Override
+    public Optional<Member> findById(Long id) {
+        // query() 메소드는 sql 파라미터로 전달받은 쿼리를 실행하고 RowMapper를 이용해서 ResultSet의 결과를 자바 객체로 변환한다.
+        // jdbcTemplate.query()는 List<Member> 형태를 반환함.
+        List<Member> result = jdbcTemplate.query("select * from member where id = ?", memberRowMapper(), id);  // 첫번째 파라미터는 sql 쿼리의 ?물음표 부분에, memberRowMapper()로 불러온 ResultSet의 member 객체의 id값을 집어넣는다.
+        return result.stream().findAny();  // 그러면 완성된 쿼리(반환 자료형은 리스트)로 DB에 적용시켜 DB에서 찾아봄.
+    }
+    // findByName 메소드는 위의 findById 메소드의 코드에서 id를 name으로 바꾸기만 하면 된다.
+
+    @Override
+    public List<Member> findAll() {
+        return jdbcTemplate.query("select * from member", memberRowMapper());
+    }
+
+    private RowMapper<Member> memberRowMapper() {  // RowMapper 는 결과인 ResultSet인 rs 값을 담아와서 그 객체를 반환하는 역할이다.
+        return (rs, rowNum) -> {
+            Member member = new Member();
+            member.setId(rs.getLong("id"));
+            member.setName(rs.getString("name"));
+            return member;
+        };
+    }
+    /*
+    // 아래 코드를 option + enter 키를 눌러, 람다로 변경한것이 위의 코드임.
+    // 참고로 람다 함수는 함수형 프로그래밍 언어에서 사용되는 개념으로 익명 함수라고도 한다.
+    // RowMapper 인터페이스의 mapRow() 메소드는 SQL 실행 결과로 구한 ResultSet에서 한 행의 데이터를 읽어와 자바 객체로 변환하는 매퍼 기능을 구현한다.
+    private RowMapper<Member> memberRowMapper() {
+        return new RowMapper<Member>() {
+            @Override
+            public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Member member = new Member();
+                member.setId(rs.getLong("id"));
+                member.setName(rs.getString("name"));
+                return member;
+            }
+        };
+    }
+    */
+}
+
+< main_hellospring_SpringConfig 수정 코드 >
+return new JdbcMemberRepository(dataSource); 를
+return new JdbcTemplateMemberRepository(dataSource); 로 교체해주면 된다.
 
 ------------------------------------------------
 
