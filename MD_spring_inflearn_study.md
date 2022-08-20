@@ -19,7 +19,8 @@
 - 이전에 실행한 Run을 그대로 실행하려면 control + r 키를 누르면 된다.
 - 예를들어 의존관계 DI 형성할때처럼, 작성한 코드를 이용하여 관련 생성자(Constructor)를 만들고싶다면, control + enter 키를 누르면 된다.
 - 가장 최근에 봤던 파일들 목록들을 최근순으로 보려면 command + e 키를 누르면 된다.
-- return 문에 람다식 적용시키고 싶다면 해당 부분에 키보드 커서 올려두고, option + enter 키를 누르면 된다.
+- return 문에 람다식 적용시키고 싶다면, 해당 부분에 키보드 커서 올려두고, option + enter 키를 누르면 된다.
+- 객체선언하고 return할때 변수명 코드가 중복되어 하나로 중복제거하고싶다면, 해당 return 부분에 키보드 커서 올려두고, command + option + n 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -347,6 +348,10 @@ public class MemberService {
 ---------- '회원 서비스 테스트' 강의 부분 필기 ----------
 
 여기 부분은 Spring 사용없이 순수한 자바 코드만으로 이루어져있으므로, @SpringBootTest를 적지않아도 된다.
+
+참고로 @AfterEach나 @Transactional로 롤백을 할시에,
+테스트 케이스에서 특정 메소드만 DB 롤백없이 그대로 반영하고싶을때에는
+@Test 밑에 @Commit 을 적어주면 된다.
 
 < test_hellospring_service_MemberServiceTest >
 class MemberServiceTest {
@@ -712,6 +717,8 @@ class MemberServiceIntegrationTest {
 
 -------- '스프링 JdbcTemplate' 강의 부분 필기 --------
 
+스프링 JdbcTemplate과 MyBatis 같은 라이브러리는 JDBC API에서 본 반복 코드를 대부분 제거해준다. 하지만 SQL은 직접 작성해야 한다.
+
 query() 메소드는 sql 파라미터로 전달받은 쿼리를 실행하고 RowMapper를 이용해서 ResultSet의 결과를 자바 객체로 변환한다.
 dbcTemplate.query()는 List<Member> 형태를 반환한다.
 RowMapper 인터페이스의 mapRow() 메소드는 SQL 실행 결과로 구한 ResultSet에서 한 행의 데이터를 읽어와 자바 객체로 변환하는 매퍼 기능을 구현한다.
@@ -777,6 +784,107 @@ public class JdbcTemplateMemberRepository implements MemberRepository {
 < main_hellospring_SpringConfig 수정 코드 >
 return new JdbcMemberRepository(dataSource); 를
 return new JdbcTemplateMemberRepository(dataSource); 로 교체해주면 된다.
+
+------------------------------------------------
+
+--------------- 'JPA' 강의 부분 필기 ---------------
+
+JPA는 기존의 반복 코드는 물론이고, 기본적인 SQL도 JPA가 직접 만들어서 실행해준다.
+JPA를 사용하면, SQL과 데이터 중심의 설계에서 객체 중심의 설계로 패러다임을 전환을 할 수 있다.
+
+JPA는 ORM(Object-relational mapping) 기술로
+객체와 DB의 데이터테이블을 매핑시켜주는 역할을 한다.
+매핑은 어노테이션으로 한다.
+
+@Entity 어노테이션을 클래스에 선언하면 그 클래스는 JPA가 관리한다.
+@Column은 객체 필드를 테이블의 컬럼에 매핑시켜주는 어노테이션이다.
+
+@Column(name = "name(필드와 매핑할 테이블의 컬럼 이름. 기본값은 객체의 필드 이름)")  //  @Column(name = "username")
+private String name;
+
+@Entity  // @Entity를 적어주면, 이것은 JPA가 관리하는 엔티티이다 라는 것이다.
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)  // sql쿼리로 DB에 데이터를 insert해주면, DB가 pk id값을 자동으로 생성해서 부여해주것을 IDENTITY 전략(strategy) 이라고 부른다.
+
+< build.gradle 파일 코드 수정 부분>
+// implementation 'org.springframework.boot:spring-boot-starter-jdbc' 이부분 삭제하고
+implementation 'org.springframework.boot:spring-boot-starter-data-jpa'  // 이걸로 변경
+
+< main_resources_application.properties 파일 추가 코드 작성 >
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=none
+
+< main_hellospring_domain_Member 수정 코드 >
+// 회원 도메인 객체
+@Entity  // 이것은 JPA가 관리하는 엔티티이다 라는 것이다.
+public class Member {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)  // sql쿼리로 DB에 데이터를 insert해주면, DB가 pk id값을 자동으로 생성해서 부여해주것을 IDENTITY 전략(strategy) 이라고 부른다.
+    private Long id;
+
+    // @Column(name = "name(필드와 매핑할 테이블의 컬럼 이름. 기본값은 객체의 필드 이름)")  // @Column(name = "username")
+    private String name;
+}
+
+< main_hellospring_repository_JpaMemberRepository >
+public class JpaMemberRepository implements MemberRepository {
+
+    private final EntityManager em;
+
+    public JpaMemberRepository(EntityManager em) {  // JPA는 EntityManager 라는것으로 모든걸 동작한다.
+        this.em = em;
+    }
+
+    @Override
+    public Member save(Member member) {
+        em.persist(member);  // persist는 영속하다. 영구 저장하다. 라는 뜻이다.
+        return member;
+    }
+
+    @Override
+    public Optional<Member> findById(Long id) {  // findById 에서 pk id 처럼 단건으로 조회하는기능은 createQuery jpql을 사용할필요 없지만, 다른 findByName나 findAll 기능은 jpql을 작성하여 사용해야한다.
+        Member member = em.find(Member.class, id);
+        return Optional.ofNullable(member);
+    }
+
+    @Override
+    public Optional<Member> findByName(String name) {
+        List<Member> result = em.createQuery("select m from Member m where m.name = :name", Member.class)  // 엔티티 m의 name 필드값에, m.name = ?로 ?값을 조회하고싶은데, 이 ?값을 name이라는 내맘대로 이름으로 지정해두고
+                .setParameter("name", name)  // 왼쪽 "name"은 createQuery의 :name 부분이고, 오른쪽 name은 찾고자하는 이름인 findByName 메소드의 매개변수인 name 값이다.
+                // setParameter로 데이터를 동적으로 바인딩시켜, 위의 :name부분을 찾고자하는 이름의 name값으로 치환시켜, 조회하는 기능의 jpql 쿼리를 날리겠다는 뜻이다.
+                .getResultList();
+        return result.stream().findAny();  // 필터링된 그중에서 가장 먼저 탐색된 요소를 반환함.
+    }
+
+    @Override
+    public List<Member> findAll() {
+        return em.createQuery("select m from Member m", Member.class).getResultList();  // createQuery는 JPQL이라는 객체지향 쿼리언어 이다.
+                                                                                                // 보통 DB테이블을 대상으로 sql쿼리를 날리지만, jpql은 엔티티가 된 객체를 대상으로 쿼리를 날린다.
+                                                                                                // 그러면 나중에 알아서 sql로 번역이 된다.
+                                                                                                // 해당 코드를 해석해보자면, Member 엔티티를 조회하는데 그건 m으로 정히겠다는 뜻이다.
+    }
+}
+
+< main_hellospring_service_MemberService 수정 코드>
+    @Transactional  // JPA를 통한 모든 데이터 변경은 트랜잭션 안에서 실행해야 한다.
+    public Long join(Member member) {
+    }
+
+< main_hellospring_SpringConfig 수정 코드 >
+    private DataSource dataSource;
+    @Autowired
+    public SpringConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+이거를
+    private EntityManager em;
+    @Autowired
+    public SpringConfig(EntityManager em) {
+        this.em = em;
+    }
+이걸로 수정해준다.
+그리고
+return new JdbcMemberRepository(dataSource); 를
+return new JpaMemberRepository(em); 로 교체해주면 된다.
 
 ------------------------------------------------
 
