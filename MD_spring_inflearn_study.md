@@ -796,6 +796,8 @@ JPA는 ORM(Object-relational mapping) 기술로
 객체와 DB의 데이터테이블을 매핑시켜주는 역할을 한다.
 매핑은 어노테이션으로 한다.
 
+Entity는 객체 관점에서 테이블에 대응되어 부르는 개념이다. @Entity 를 붙인 클래스의 이름으로 자동으로 데이터베이스의 테이블과 매핑이 된다.
+
 @Entity 어노테이션을 클래스에 선언하면 그 클래스는 JPA가 관리한다.
 @Column은 객체 필드를 테이블의 컬럼에 매핑시켜주는 어노테이션이다.
 
@@ -885,6 +887,52 @@ public class JpaMemberRepository implements MemberRepository {
 그리고
 return new JdbcMemberRepository(dataSource); 를
 return new JpaMemberRepository(em); 로 교체해주면 된다.
+
+------------------------------------------------
+
+---------- '스프링 데이터 JPA' 강의 부분 필기 ----------
+
+< main_hellospring_repository_SpringDataJpaMemberRepository > 
+// 아래의 SpringDataJpaMemberRepository 인터페이스의 경우처럼 인터페이스 JpaRepository를 상속받는 인터페이스의 경우,
+// 스프링 데이터 JPA가 인터페이스 SpringDataJpaMemberRepository의 메소드 구현체를 알아서 자동으로 만들어서 스프링 빈으로 자동 등록해준다.
+// 뿐만아니라 MemberRepository라는 빈을 따로 등록할 필요가 없다. 스프링 jpa가 구현체를 자동으로 생성하여 bean으로 자동 등록해주었기 때문에 그냥 호출해서 사용하면된다.
+// 즉, 인터페이스 스프링 제이피에이가 구현체를 자동으로 만들어줌으로써 그걸 가져다쓰기만하면되고, 이걸 SpringConfig에서 따로 Bean등록없이 MemberRepository를 @Autowired 할수있게 해준다.
+public interface SpringDataJpaMemberRepository extends JpaRepository<Member, Long>, MemberRepository {  // 인터페이스가 인터페이스를 상속받을때에는 implements가 아닌, extends를 사용한다. 그리고 콤마(,)로 구분하여 다중 상속이 가능하다.
+                                                                                                        // <Member, Long>는 <@Entity가 적혀있는 Member 클래스의 DB 엔티티, Member 엔티티의 pk id의 자료형인 Long> 이다.  // 자료형 <class T,ID 식별자 pk 자료형>
+    @Override
+    Optional<Member> findByName(String name);
+    // findAll , save, findById는 구현이 필요없는데, 이는 JpaRepository안에 매우 기본적이고 공통적인 CRUD등이 전부 구현되어 있기 때문이다.
+    // 하지만, findByName처럼 JpaRepository에 없는 특별한 경우에 대해서는 구현되어 있기 어렵다. (모든 시스템이 다르기 때문에)
+    // 그래서 findByName 은 직접 구현해주어야한다.
+}
+
+< main_hellospring_SpringConfig 수정 코드 (전부 다시 적음) >
+@Configuration
+public class SpringConfig {
+
+    private final MemberRepository memberRepository;
+
+    // main_hellospring_repository_SpringDataJpaMemberRepository 덕분에 알아서 구현체가 빈에 등록되어있어 @Autowired로 의존관계 형성 가능해져서 인젝션 받음.
+    @Autowired  // @Autowired 생략 가능하긴함.
+    public SpringConfig(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
+
+    @Bean  // 스프링 빈을 내가 직접 등록할거야 라는 의미이다.
+    public MemberService memberService() {
+        return new MemberService(memberRepository);
+    }
+
+    /*
+    @Bean
+    public MemberRepository memberRepository() {  // public 메소드반환자료형 메소드명()  // memberRepository()는 생성자 아니니까 헷갈리지말자!
+        // return new MemoryMemberRepository();  // MemberRepository는 인터페이스이기때문에 new로 인스턴스 생성이 불가능하므로, 메모리구현체인 new MemoryMemberRepository() 를 반환한다.
+        // return new JdbcMemberRepository(dataSource);  // 이로써 MemoryMemberRepository 를 Jdbc 데이터베이스로 교체하였음.
+        // return new JdbcTemplateMemberRepository(dataSource);
+        // return new JpaMemberRepository(em);
+    }
+    */
+}
 
 ------------------------------------------------
 
