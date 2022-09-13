@@ -20,7 +20,7 @@
 - 예를들어 의존관계 DI 형성할때처럼, 작성한 코드를 이용하여 관련 생성자(Constructor)를 만들고싶다면, control + enter 키를 누르면 된다.
 - 가장 최근에 봤던 파일들 목록들을 최근순으로 보려면 command + e 키를 누르면 된다.
 - return 문에 람다식 적용시키고 싶다면, 해당 부분에 키보드 커서 올려두고, option + enter 키를 누르면 된다.
-- 객체선언하고 return할때 변수명 코드가 중복되어 하나로 중복제거하고싶다면, 해당 return 부분에 키보드 커서 올려두고, command + option + n 키를 누르면 된다.
+- 객체선언하고 return할때 변수명 코드가 중복되어 하나로 중복제거하고싶다면, 해당 return 옆의 변수 부분에 키보드 커서 올려두고, command + option + n 키를 누르면 된다.
 
 ----------- 'View 환경설정' 강의 부분 필기 -----------
 
@@ -932,6 +932,31 @@ public class SpringConfig {
         // return new JpaMemberRepository(em);
     }
     */
+}
+
+------------------------------------------------
+
+------------- 'AOP 적용' 강의 부분 필기 -------------
+
+< main_hellospring_aop_TimeTraceAop >
+@Aspect
+@Component  // 이처럼 이걸로 컴포넌트 스캔 방법으로 스프링 빈에 등록하여 사용해도 되긴하지만,
+            // 이 클래스는 좀 특별하다고 생각되기에 main_hellospring_SpringConfig 에 따로 직접 스프링 빈 등록 방법을 더 선호한다.
+            // 일단 여기서는 컴포넌트 스캔 방법을 사용하겠다.
+public class TimeTraceAop {
+
+    @Around("execution(* hello.hellospring..*(..))")  // 원하는 곳(해당 경로 범위)에 공통 관심 사항 (시간측정로직 TimeTraceAop) 적용
+    public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        System.out.println("START: " + joinPoint.toString());  // joinPoint.toString() 이걸로 어떤 메서드를 콜하는지 이름을 알수있게 해준다.
+        try {
+            return joinPoint.proceed();
+        } finally {
+            long finish = System.currentTimeMillis();
+            long timeMs = finish - start;
+            System.out.println("END: " + joinPoint.toString() + " " + timeMs + "ms");  // joinPoint.toString() 이걸로 어떤 메서드를 콜하는지 이름을 알수있게 해준다.
+        }
+    }
 }
 
 ------------------------------------------------
