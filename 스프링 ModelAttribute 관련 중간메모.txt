@@ -1,0 +1,132 @@
+< main_hellospring_controller_HelloController >
+
+    @Getter
+    @Setter
+    public class Helloshj {
+        private String name;
+        private int num;
+    }
+
+    @GetMapping("/test-url")
+    public String goform(@ModelAttribute("shj") Helloshj shj, Model model) {
+        return "GutForm";  // 겉폼양식.html
+    }
+
+    @PostMapping("/test-api")
+    public String submitform(@ModelAttribute Helloshj shj) {  // @ModelAttribute 부분이 다른 어노테이션보다 가장 먼저 실행돼서 모델 객체부터 먼저 생성함.
+        shjstore.save(shj);
+        return "redirect:/";
+    }
+
+
+< GutForm.html >
+< http://localhost:8080/test-url?name=이름이다&num=777 >
+
+<input type="text" name="name" value="${shj.name}">
+<input type="text" name="num" value="${shj.num}">
+
+------------------------
+
+    @Getter
+    @Setter
+    public class Helloshj {
+        private String name;
+        private int num;
+    }
+
+    @GetMapping("/test-url")
+    public String goform(Model model) {
+        model.addAttribute("shj", shj);  // model.addAttribute("shj", new Helloshj());
+        return "GutForm";  // 겉폼양식.html
+    }
+
+    @PostMapping("/test-api")
+    public String submitform(@ModelAttribute Helloshj shj) {  // @ModelAttribute 부분이 다른 어노테이션보다 가장 먼저 실행돼서 모델 객체부터 먼저 생성함.
+        Member member = new Member();
+	member.setName(shj.getName));
+	member.setId(shj.getNum));
+	memberService.join(member);
+        return "redirect:/";
+    }
+
+
+< GutForm.html >
+< http://localhost:8080/test-url >
+
+<input type="text" name="name" placeholder="이름을 입력하세요">
+<input type="text" name="num" placeholder="넘버를 입력하세요">
+
+------------------------
+
+
+    @Getter
+    @Setter
+    public class Helloshj {
+        private String name;
+        private int num;
+    }
+
+    @GetMapping("/test-url")
+    public String goform(Model model) {
+        model.addAttribute("shj", new Helloshj());
+        return "GutForm";  // 겉폼양식.html
+    }
+
+    @PostMapping("/test-api")
+    public String submitform(@ModelAttribute Helloshj shj) {  // @ModelAttribute 부분이 다른 어노테이션보다 가장 먼저 실행돼서 모델 객체부터 먼저 생성함.
+        shjstore.save(shj);
+        return "redirect:/";
+    }
+
+
+
+
+============
+============
+------------------------
+
+    @Getter
+    @Setter
+    public class Helloshj {
+        private String name;
+        private int num;
+    }
+
+    @GetMapping("/test-url")
+    public String goform(Model model) {
+        model.addAttribute("shj", new Helloshj());
+        return "GutForm";  // 겉폼양식.html
+    }
+
+    @PostMapping("/test-api")
+    public String submitform(@ModelAttribute Helloshj shj) {  // @ModelAttribute 부분이 다른 어노테이션보다 가장 먼저 실행돼서 모델 객체부터 먼저 생성함.
+        Member member = new Member();
+	member.setName(shj.getName));
+	member.setId(shj.getNum));
+	memberService.join(member);
+        return "redirect:/";
+        /*
+        shjstore.save(shj);
+        return "redirect:/";
+        */
+    }
+
+
+< GutForm.html >
+< http://localhost:8080/test-url >
+
+<form action="#" th:action="@{/test-api}" th:object="${shj}" method="post">
+    <p>이름 입력: <input type="text" th:field="*{name}"></p>
+    <p>넘버 입력: <input type="text" th:field="*{num}"></p>
+    <p><input type="submit" value="제출"> <input type="reset" value="리셋"></p>
+</form>
+
+------------------------
+
+
+
+
+
+
+
+
